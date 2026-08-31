@@ -1,0 +1,32 @@
+{
+  "source": "Яндекс Погода",
+  "generated_at": "2026-08-31T06:00:00+03:00",
+  "today": {
+    "date": "2026-08-31",
+    "morning": {"temp": 17, "condition": "light-rain"},
+    "day": {"temp": 20, "condition": "light-rain"},
+    "evening": {"temp": 19, "condition": "cloudy"}
+  },
+  "tomorrow": {
+    "date": "2026-09-01",
+    "day_temp": 21,
+    "night_temp": 16,
+    "condition": "partly-cloudy",
+    "condition_text": "ПАСМУРНО • УТРОМ ПРОЯСНЕНИЯ",
+    "hourly_precipitation": [
+      {"hour": "06", "probability": 0},
+      {"hour": "09", "probability": 0},
+      {"hour": "12", "probability": 0},
+      {"hour": "15", "probability": 0},
+      {"hour": "18", "probability": 0},
+      {"hour": "21", "probability": 0}
+    ],
+    "pressure_mm": 755,
+    "wind_speed": "2–3",
+    "wind_direction": "СЗ → С",
+    "humidity": 63,
+    "sunrise": "05:53",
+    "sunset": "20:04"
+  }
+}
+

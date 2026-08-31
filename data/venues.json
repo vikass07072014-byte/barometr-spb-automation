@@ -1,0 +1,34 @@
+[
+  {
+    "name": "ГЕОГРАФИЯ",
+    "address": "ул. Рубинштейна, 5",
+    "category": "alcoholic_cocktail_18_plus",
+    "category_label": "КОКТЕЙЛЬ • 18+",
+    "item": "APEROL SPRITZ",
+    "image": "assets/menu/aperol-spritz.png",
+    "ready": true,
+    "verified_at": "2026-08-30"
+  },
+  {
+    "name": "У ЛАРИСЫ",
+    "address": "ул. Рубинштейна, 29",
+    "category": "food",
+    "category_label": "БЛЮДО ДНЯ",
+    "item": "ЧЕБУРЕК С СЫРОМ",
+    "image": "assets/menu/cheburek-cheese.png",
+    "ready": true,
+    "verified_at": "2026-08-29"
+  },
+  {
+    "name": "SURF COFFEE × MDT",
+    "address": "ул. Рубинштейна, 9/3",
+    "category": "coffee",
+    "category_label": "КОФЕ",
+    "item": "КАПУЧИНО",
+    "image": null,
+    "ready": false,
+    "verified_at": "2026-08-31",
+    "note": "Добавить отдельное изображение чашки на прозрачном фоне"
+  }
+]
+
