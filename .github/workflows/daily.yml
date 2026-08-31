@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       use_sample_weather:
-        description: Use bundled sample instead of Yandex API
+        description: Use bundled sample instead of live MET Norway API
         required: true
         default: true
         type: boolean
@@ -38,11 +38,9 @@ jobs:
 
       - run: pip install -r requirements.txt
 
-      - name: Fetch Yandex Weather
+      - name: Fetch MET Norway Weather
         if: github.event_name == 'schedule' || inputs.use_sample_weather == false
-        env:
-          YANDEX_WEATHER_API_KEY: ${{ secrets.YANDEX_WEATHER_API_KEY }}
-        run: python src/fetch_yandex.py --lat 59.9343 --lon 30.3351 --output data/weather.json
+        run: python src/fetch_weather.py --lat 59.9343 --lon 30.3351 --timezone Europe/Moscow --output data/weather.json
 
       - name: Select weather file
         shell: bash
