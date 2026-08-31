@@ -1,0 +1,91 @@
+name: Daily Barometr SPB
+
+on:
+  workflow_dispatch:
+    inputs:
+      use_sample_weather:
+        description: Use bundled sample instead of Yandex API
+        required: true
+        default: true
+        type: boolean
+      publish:
+        description: Publish to Instagram after generation
+        required: true
+        default: false
+        type: boolean
+  schedule:
+    - cron: "20 3 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-barometr-spb
+  cancel-in-progress: false
+
+jobs:
+  daily:
+    if: github.event_name == 'workflow_dispatch' || vars.AUTOMATION_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Fetch Yandex Weather
+        if: github.event_name == 'schedule' || inputs.use_sample_weather == false
+        env:
+          YANDEX_WEATHER_API_KEY: ${{ secrets.YANDEX_WEATHER_API_KEY }}
+        run: python src/fetch_yandex.py --lat 59.9343 --lon 30.3351 --output data/weather.json
+
+      - name: Select weather file
+        shell: bash
+        run: |
+          if [ -f data/weather.json ]; then
+            echo "WEATHER_FILE=data/weather.json" >> "$GITHUB_ENV"
+          else
+            echo "WEATHER_FILE=data/weather.example.json" >> "$GITHUB_ENV"
+          fi
+
+      - name: Render and validate
+        shell: bash
+        run: |
+          python src/render_card.py --weather "$WEATHER_FILE" --output docs/latest.jpg
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.publish }}" != "true" ]; then
+            python src/validate_card.py docs/latest.jpg --manifest docs/latest-manifest.json --allow-warnings
+          else
+            python src/validate_card.py docs/latest.jpg --manifest docs/latest-manifest.json
+          fi
+          python src/build_caption.py --weather "$WEATHER_FILE" --manifest docs/latest-manifest.json --output docs/latest-caption.txt
+          forecast_date=$(python -c "import json; print(json.load(open('$WEATHER_FILE', encoding='utf-8'))['tomorrow']['date'])")
+          cp docs/latest.jpg "docs/barometr-spb-$forecast_date.jpg"
+
+      - name: Commit generated card
+        shell: bash
+        run: |
+          git config user.name "barometr-spb-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add docs/
+          git diff --cached --quiet || git commit -m "Generate forecast card [skip ci]"
+          git push
+
+      - name: Publish to Instagram
+        if: inputs.publish == true || (github.event_name == 'schedule' && vars.AUTO_PUBLISH == 'true')
+        env:
+          AUTO_PUBLISH: "true"
+          INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+          INSTAGRAM_USER_ID: ${{ secrets.INSTAGRAM_USER_ID }}
+          META_API_VERSION: ${{ vars.META_API_VERSION || 'v23.0' }}
+        shell: bash
+        run: |
+          sleep 30
+          python src/publish_instagram.py \
+            --image-url "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/latest.jpg" \
+            --caption docs/latest-caption.txt \
+            --receipt docs/publish-receipt.json
