@@ -29,7 +29,6 @@ python src/build_caption.py --weather data/weather.example.json --manifest docs/
 
 1. Включить GitHub Pages: `Settings → Pages → Deploy from a branch → main / docs`.
 2. Добавить Repository secrets:
-   - `YANDEX_WEATHER_API_KEY`
    - `INSTAGRAM_ACCESS_TOKEN`
    - `INSTAGRAM_USER_ID`
 3. Добавить Repository variables:
@@ -54,5 +53,4 @@ python src/build_caption.py --weather data/weather.example.json --manifest docs/
 
 ## Погода
 
-Скрипт рассчитан на официальный API Яндекс Погоды. Подробный постоянный доступ к API может требовать платного тарифа; тестовый ключ нельзя считать бессрочным решением.
-
+Прогноз загружается из бесплатного `MET Norway Locationforecast 2.0` без API-ключа. Данные разрешены для коммерческого использования по CC BY 4.0 при обязательной атрибуции. Скрипт отправляет идентифицирующий `User-Agent`, делает два запроса в сутки (прогноз и восход/закат), а источник указывается на карточке и в подписи.
