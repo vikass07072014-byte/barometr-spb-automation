@@ -166,13 +166,18 @@ def render(weather: dict, venue: dict, config: dict, output: Path, warnings: lis
     xs = [205, 350, 495, 640, 785, 930]
     y = 812
     d.line((xs[0], y, xs[-1], y), fill=(190, 212, 221, 180), width=5)
+    uses_amounts = any("amount_mm" in item for item in timeline)
     for item, x in zip(timeline, xs):
         prob = int(item.get("probability", 0))
+        amount = float(item.get("amount_mm", 0))
+        has_rain = amount >= 0.1 if uses_amounts else prob >= 20
         centered(d, (x, y - 28), str(item["hour"]), load_font(15, bold=True))
-        d.ellipse((x-8, y-8, x+8, y+8), fill=BLUE if prob else MUTED)
-        centered(d, (x, y + 29), f"{prob}%", load_font(13, bold=True), BLUE if prob else MUTED)
-    rain_values = [int(item.get("probability", 0)) for item in timeline]
-    rain_summary = "ОСАДКИ НЕ ОЖИДАЮТСЯ" if max(rain_values, default=0) < 20 else "ОСАДКИ ВОЗМОЖНЫ • СМОТРИТЕ ТАЙМ-ЛАЙН"
+        d.ellipse((x-8, y-8, x+8, y+8), fill=BLUE if has_rain else MUTED)
+        value = f"{amount:g} ММ" if uses_amounts else f"{prob}%"
+        centered(d, (x, y + 29), value, load_font(13, bold=True), BLUE if has_rain else MUTED)
+    rain_values = [float(item.get("amount_mm", 0)) for item in timeline] if uses_amounts else [int(item.get("probability", 0)) for item in timeline]
+    threshold = 0.1 if uses_amounts else 20
+    rain_summary = "ОСАДКИ НЕ ОЖИДАЮТСЯ" if max(rain_values, default=0) < threshold else "ОСАДКИ ПО ЧАСАМ • СМОТРИТЕ ТАЙМ-ЛАЙН"
     centered(d, (W // 2, 870), rain_summary, load_font(16, bold=True), AMBER)
 
     stats = [
