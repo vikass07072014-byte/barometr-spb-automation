@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+.venv/
+.env
+data/weather.json
+docs/publish-receipt.json
+docs/latest-manifest.json
