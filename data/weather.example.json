@@ -1,5 +1,6 @@
 {
-  "source": "Яндекс Погода",
+  "source": "MET Norway",
+  "source_url": "https://api.met.no/",
   "generated_at": "2026-08-31T06:00:00+03:00",
   "today": {
     "date": "2026-08-31",
@@ -14,12 +15,12 @@
     "condition": "partly-cloudy",
     "condition_text": "ПАСМУРНО • УТРОМ ПРОЯСНЕНИЯ",
     "hourly_precipitation": [
-      {"hour": "06", "probability": 0},
-      {"hour": "09", "probability": 0},
-      {"hour": "12", "probability": 0},
-      {"hour": "15", "probability": 0},
-      {"hour": "18", "probability": 0},
-      {"hour": "21", "probability": 0}
+      {"hour": "06", "amount_mm": 0.0},
+      {"hour": "09", "amount_mm": 0.0},
+      {"hour": "12", "amount_mm": 0.0},
+      {"hour": "15", "amount_mm": 0.0},
+      {"hour": "18", "amount_mm": 0.0},
+      {"hour": "21", "amount_mm": 0.0}
     ],
     "pressure_mm": 755,
     "wind_speed": "2–3",
@@ -29,4 +30,3 @@
     "sunset": "20:04"
   }
 }
-
