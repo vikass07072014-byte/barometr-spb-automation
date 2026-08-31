@@ -1,0 +1,26 @@
+{
+  "profile": "barometr.spb",
+  "city": "Санкт-Петербург",
+  "latitude": 59.9343,
+  "longitude": 30.3351,
+  "timezone": "Europe/Moscow",
+  "daily_publish_time": "06:30",
+  "weather_source": "Яндекс Погода",
+  "rotation": [
+    "food",
+    "alcoholic_drink_18_plus",
+    "coffee",
+    "non_alcoholic_drink",
+    "food",
+    "alcoholic_cocktail_18_plus",
+    "dessert_or_non_alcoholic_drink"
+  ],
+  "background": "assets/backgrounds/rubinstein-day.png",
+  "output": {
+    "width": 1080,
+    "height": 1350,
+    "format": "JPEG",
+    "quality": 94
+  }
+}
+
