@@ -13,6 +13,16 @@ on:
         required: true
         default: false
         type: boolean
+      forecast_date:
+        description: Optional forecast date in YYYY-MM-DD format
+        required: false
+        default: ""
+        type: string
+      publish_date:
+        description: Optional Buffer publication date in YYYY-MM-DD format
+        required: false
+        default: ""
+        type: string
   schedule:
     - cron: "50 4 * * *"
 
@@ -40,7 +50,18 @@ jobs:
 
       - name: Fetch MET Norway Weather
         if: github.event_name == 'schedule' || inputs.use_sample_weather == false
-        run: python src/fetch_weather.py --lat 59.9343 --lon 30.3351 --timezone Europe/Moscow --output data/weather.json
+        shell: bash
+        run: |
+          fetch_flags=()
+          if [ -n "${{ inputs.forecast_date }}" ]; then
+            fetch_flags+=(--forecast-date "${{ inputs.forecast_date }}")
+          fi
+          python src/fetch_weather.py \
+            --lat 59.9343 \
+            --lon 30.3351 \
+            --timezone Europe/Moscow \
+            --output data/weather.json \
+            "${fetch_flags[@]}"
 
       - name: Select weather file
         shell: bash
@@ -67,6 +88,8 @@ jobs:
           python src/build_caption.py --weather "$WEATHER_FILE" --manifest docs/latest-manifest.json --output docs/latest-caption.txt
           forecast_date=$(python -c "import json; print(json.load(open('$WEATHER_FILE', encoding='utf-8'))['tomorrow']['date'])")
           cp docs/latest.jpg "docs/barometr-spb-$forecast_date.jpg"
+          cp docs/latest-caption.txt "docs/barometr-spb-$forecast_date-caption.txt"
+          cp docs/latest-manifest.json "docs/barometr-spb-$forecast_date-manifest.json"
           echo "FORECAST_DATE=$forecast_date" >> "$GITHUB_ENV"
 
       - name: Commit generated card
@@ -105,13 +128,21 @@ jobs:
           BUFFER_CHANNEL_ID: ${{ secrets.BUFFER_CHANNEL_ID }}
         shell: bash
         run: |
+          publish_flags=()
+          if [ -n "${{ inputs.publish_date }}" ]; then
+            publish_flags+=(--publish-date "${{ inputs.publish_date }}")
+          elif [ -n "${{ inputs.forecast_date }}" ]; then
+            publish_flags+=(--publish-date "${{ inputs.forecast_date }}")
+          fi
           python src/publish_buffer.py \
             --image-url "$IMAGE_URL" \
             --caption docs/latest-caption.txt \
             --manifest docs/latest-manifest.json \
             --receipt docs/schedule-receipt.json \
             --publish-time "08:00" \
-            --timezone "Europe/Moscow"
+            --timezone "Europe/Moscow" \
+            "${publish_flags[@]}"
+          cp docs/schedule-receipt.json "docs/schedule-receipt-$FORECAST_DATE.json"
           python src/update_history.py \
             --venues data/venues.json \
             --manifest docs/latest-manifest.json \
@@ -123,6 +154,6 @@ jobs:
         run: |
           git config user.name "barometr-spb-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add data/venues.json docs/schedule-receipt.json
+          git add data/venues.json docs/schedule-receipt.json "docs/schedule-receipt-$FORECAST_DATE.json"
           git diff --cached --quiet || git commit -m "Record Buffer schedule [skip ci]"
           git push

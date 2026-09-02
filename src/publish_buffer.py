@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -56,6 +56,7 @@ def request_graphql(api_url: str, token: str, query: str, variables: dict) -> di
 def resolve_due_at(
     publish_time: str,
     timezone_name: str,
+    publish_date: date | None = None,
     now: datetime | None = None,
     minimum_lead_minutes: int = 2,
 ) -> str:
@@ -66,10 +67,16 @@ def resolve_due_at(
     current = current.astimezone(timezone.utc)
     hour, minute = (int(part) for part in publish_time.split(":"))
     local_now = current.astimezone(local_timezone)
-    local_target = local_now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+    target_date = publish_date or local_now.date()
+    local_target = datetime.combine(target_date, datetime.min.time(), local_timezone).replace(
+        hour=hour,
+        minute=minute,
+    )
     target = local_target.astimezone(timezone.utc)
     minimum_target = current + timedelta(minutes=minimum_lead_minutes)
     if target < minimum_target:
+        if publish_date is not None:
+            raise ValueError("Requested publish date/time is in the past or too close")
         target = minimum_target
     return target.isoformat(timespec="seconds").replace("+00:00", "Z")
 
@@ -123,6 +130,7 @@ def main() -> None:
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--receipt", type=Path, required=True)
     parser.add_argument("--publish-time", default="08:00")
+    parser.add_argument("--publish-date", type=date.fromisoformat)
     parser.add_argument("--timezone", default="Europe/Moscow")
     args = parser.parse_args()
 
@@ -135,7 +143,7 @@ def main() -> None:
 
     caption = args.caption.read_text(encoding="utf-8")
     manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
-    due_at = resolve_due_at(args.publish_time, args.timezone)
+    due_at = resolve_due_at(args.publish_time, args.timezone, publish_date=args.publish_date)
     post = create_scheduled_post(token, channel_id, args.image_url, caption, due_at)
     receipt = {
         "provider": "buffer",

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sys
 import unittest
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 from unittest.mock import patch
 
@@ -27,6 +27,29 @@ class BufferSchedulingTest(unittest.TestCase):
         due_at = resolve_due_at("08:00", "Europe/Moscow", now=now)
 
         self.assertEqual(due_at, "2026-09-01T05:07:00Z")
+
+    def test_resolves_explicit_future_publish_date(self) -> None:
+        now = datetime(2026, 9, 2, 6, 0, tzinfo=timezone.utc)
+
+        due_at = resolve_due_at(
+            "08:00",
+            "Europe/Moscow",
+            publish_date=date(2026, 9, 5),
+            now=now,
+        )
+
+        self.assertEqual(due_at, "2026-09-05T05:00:00Z")
+
+    def test_rejects_explicit_past_publish_date(self) -> None:
+        now = datetime(2026, 9, 2, 6, 0, tzinfo=timezone.utc)
+
+        with self.assertRaisesRegex(ValueError, "past or too close"):
+            resolve_due_at(
+                "08:00",
+                "Europe/Moscow",
+                publish_date=date(2026, 9, 2),
+                now=now,
+            )
 
     @patch("publish_buffer.request_graphql")
     def test_creates_automatic_instagram_image_post(self, request_graphql) -> None:

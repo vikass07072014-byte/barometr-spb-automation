@@ -43,6 +43,34 @@ class VenueRotationTest(unittest.TestCase):
         self.assertEqual(venue["name"], "NEW")
         self.assertEqual(warnings, [])
 
+    def test_configurable_repeat_window_prefers_new_venue(self) -> None:
+        venues = [
+            {
+                "name": "USED SEVEN DAYS AGO",
+                "category": "food",
+                "ready": True,
+                "image": "used.png",
+                "used_dates": ["2026-08-30"],
+            },
+            {
+                "name": "NEW",
+                "category": "food",
+                "ready": True,
+                "image": "new.png",
+            },
+        ]
+
+        venue, warnings = choose_venue(
+            venues,
+            "2026-09-06",
+            ["food"],
+            strict=True,
+            repeat_days=14,
+        )
+
+        self.assertEqual(venue["name"], "NEW")
+        self.assertEqual(warnings, [])
+
     def test_preview_can_render_without_weakening_publication_gate(self) -> None:
         venues = [
             {

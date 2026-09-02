@@ -75,5 +75,29 @@
     "verified_at": "2026-09-01",
     "venue_source": "https://ministerstvo.bar/",
     "menu_source": "https://ministerstvo.bar/"
+  },
+  {
+    "name": "СЧАСТЬЕ",
+    "address": "ул. Рубинштейна, 15–17",
+    "category": "dessert_or_non_alcoholic_drink",
+    "category_label": "ДЕСЕРТ ДНЯ",
+    "item": "КОНФЕТА СЧАСТЬЕ",
+    "image": "assets/menu/schastye-candy.png",
+    "ready": true,
+    "verified_at": "2026-09-02",
+    "venue_source": "https://schastye.com/en/restaurants/rub",
+    "menu_source": "https://schastye.com/en/restaurants/rub"
+  },
+  {
+    "name": "КРЕВЕТОЧНАЯ",
+    "address": "ул. Рубинштейна, 38",
+    "category": "food",
+    "category_label": "БЛЮДО ДНЯ",
+    "item": "ШРИМП-БУРГЕР С АВОКАДО",
+    "image": "assets/menu/krevetochna-shrimp-burger.png",
+    "ready": true,
+    "verified_at": "2026-09-02",
+    "venue_source": "https://xn--b1afbavvgmv5c5b.xn--p1ai/",
+    "menu_source": "https://xn--b1afbavvgmv5c5b.xn--p1ai/menu"
   }
 ]

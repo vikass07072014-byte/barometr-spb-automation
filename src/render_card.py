@@ -92,16 +92,17 @@ def choose_venue(
     rotation: list[str],
     strict: bool,
     preview: bool = False,
+    repeat_days: int = 7,
 ) -> tuple[dict, list[str]]:
     target = date.fromisoformat(target_date)
     ordinal = target.toordinal()
     wanted = rotation[ordinal % len(rotation)]
 
-    def used_within_week(venue: dict) -> bool:
+    def used_recently(venue: dict) -> bool:
         for raw_date in venue.get("used_dates", []):
             used_date = date.fromisoformat(raw_date)
             age = (target - used_date).days
-            if 0 <= age < 7:
+            if 0 <= age < repeat_days:
                 return True
         return False
 
@@ -110,7 +111,7 @@ def choose_venue(
         if v.get("ready")
         and v.get("category") == wanted
         and v.get("image")
-        and not used_within_week(v)
+        and not used_recently(v)
     ]
     warnings: list[str] = []
     if not candidates:
@@ -298,6 +299,7 @@ def main() -> None:
         config["rotation"],
         args.strict,
         preview=args.preview,
+        repeat_days=int(config.get("venue_repeat_days", 7)),
     )
     manifest_path = render(weather, venue, config, args.output, warnings)
     print(json.dumps({"image": str(args.output), "manifest": str(manifest_path)}, ensure_ascii=False))
