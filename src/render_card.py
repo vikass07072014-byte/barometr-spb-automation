@@ -86,7 +86,13 @@ def format_temp(value) -> str:
     return f"{value:+d}°"
 
 
-def choose_venue(venues: list[dict], target_date: str, rotation: list[str], strict: bool) -> tuple[dict, list[str]]:
+def choose_venue(
+    venues: list[dict],
+    target_date: str,
+    rotation: list[str],
+    strict: bool,
+    preview: bool = False,
+) -> tuple[dict, list[str]]:
     target = date.fromisoformat(target_date)
     ordinal = target.toordinal()
     wanted = rotation[ordinal % len(rotation)]
@@ -108,6 +114,17 @@ def choose_venue(venues: list[dict], target_date: str, rotation: list[str], stri
     ]
     warnings: list[str] = []
     if not candidates:
+        preview_candidates = [
+            v for v in venues
+            if v.get("ready")
+            and v.get("category") == wanted
+            and v.get("image")
+        ]
+        if preview and preview_candidates:
+            warnings.append(
+                f"Preview reused a recently featured venue for rotation category: {wanted}."
+            )
+            return preview_candidates[ordinal % len(preview_candidates)], warnings
         raise ValueError(
             f"No unused publication-ready venue for rotation category: {wanted}. "
             "Add and verify a new venue instead of repeating an old one."
@@ -259,12 +276,19 @@ def main() -> None:
     parser.add_argument("--config", type=Path, default=ROOT / "config.json")
     parser.add_argument("--output", type=Path, default=ROOT / "docs/latest.jpg")
     parser.add_argument("--strict", action="store_true")
+    parser.add_argument("--preview", action="store_true")
     args = parser.parse_args()
 
     weather = json.loads(args.weather.read_text(encoding="utf-8"))
     venues = json.loads(args.venues.read_text(encoding="utf-8"))
     config = json.loads(args.config.read_text(encoding="utf-8"))
-    venue, warnings = choose_venue(venues, weather["tomorrow"]["date"], config["rotation"], args.strict)
+    venue, warnings = choose_venue(
+        venues,
+        weather["tomorrow"]["date"],
+        config["rotation"],
+        args.strict,
+        preview=args.preview,
+    )
     manifest_path = render(weather, venue, config, args.output, warnings)
     print(json.dumps({"image": str(args.output), "manifest": str(manifest_path)}, ensure_ascii=False))
 

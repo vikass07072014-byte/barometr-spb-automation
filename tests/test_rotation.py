@@ -43,6 +43,26 @@ class VenueRotationTest(unittest.TestCase):
         self.assertEqual(venue["name"], "NEW")
         self.assertEqual(warnings, [])
 
+    def test_preview_can_render_without_weakening_publication_gate(self) -> None:
+        venues = [
+            {
+                "name": "USED",
+                "category": "coffee",
+                "ready": True,
+                "image": "used.png",
+                "used_dates": ["2026-09-01"],
+            }
+        ]
+        venue, warnings = choose_venue(
+            venues,
+            "2026-09-02",
+            ["coffee"],
+            strict=False,
+            preview=True,
+        )
+        self.assertEqual(venue["name"], "USED")
+        self.assertEqual(len(warnings), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

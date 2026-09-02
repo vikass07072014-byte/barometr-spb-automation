@@ -54,7 +54,11 @@ jobs:
       - name: Render and validate
         shell: bash
         run: |
-          python src/render_card.py --weather "$WEATHER_FILE" --output docs/latest.jpg
+          render_flags=()
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.publish }}" != "true" ]; then
+            render_flags+=(--preview)
+          fi
+          python src/render_card.py --weather "$WEATHER_FILE" --output docs/latest.jpg "${render_flags[@]}"
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.publish }}" != "true" ]; then
             python src/validate_card.py docs/latest.jpg --manifest docs/latest-manifest.json --allow-warnings
           else
