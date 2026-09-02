@@ -59,7 +59,10 @@
     "ready": true,
     "verified_at": "2026-09-01",
     "venue_source": "https://www.smokebbq.ru/",
-    "menu_source": "https://shop.smokebbq.ru/"
+    "menu_source": "https://shop.smokebbq.ru/",
+    "used_dates": [
+      "2026-09-03"
+    ]
   },
   {
     "name": "МИНИСТЕРСТВО",
