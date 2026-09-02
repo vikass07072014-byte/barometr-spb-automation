@@ -4,7 +4,7 @@ import argparse
 import json
 import os
 from collections import Counter
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -63,9 +63,42 @@ def period(point: dict) -> dict:
 
 
 def amount_mm(point: dict) -> float:
-    details = period(point).get("details", {})
+    # The card timeline is explicitly hourly. Do not present a 6- or 12-hour
+    # accumulation as if it belonged to one hour when next_1_hours is absent.
+    details = point.get("data", {}).get("next_1_hours", {}).get("details", {})
     value = details.get("precipitation_amount", 0)
     return round(float(value or 0), 1)
+
+
+def forecast_amount_mm(point: dict) -> float:
+    data = point.get("data", {})
+    for key in ("next_1_hours", "next_6_hours", "next_12_hours"):
+        if data.get(key):
+            value = data[key].get("details", {}).get("precipitation_amount", 0)
+            return round(float(value or 0), 1)
+    return 0.0
+
+
+def timeline_precipitation(point: dict) -> dict:
+    data = point.get("data", {})
+    if data.get("next_1_hours"):
+        amount = amount_mm(point)
+        return {
+            "amount_mm": amount,
+            "has_precipitation": amount >= 0.1 or "rain" in symbol_condition(point_symbol(point)),
+        }
+    for hours in (6, 12):
+        block = data.get(f"next_{hours}_hours", {})
+        if block:
+            amount = round(float(block.get("details", {}).get("precipitation_amount", 0) or 0), 1)
+            condition = symbol_condition(block.get("summary", {}).get("symbol_code", "cloudy"))
+            has_precipitation = amount >= 0.1 or "rain" in condition or "snow" in condition
+            return {
+                "has_precipitation": has_precipitation,
+                "label": "ДОЖДЬ" if has_precipitation else "—",
+                "resolution_hours": hours,
+            }
+    return {"has_precipitation": False, "label": "—"}
 
 
 def point_symbol(point: dict) -> str:
@@ -91,7 +124,7 @@ def condition_summary(points: list[tuple[datetime, dict]]) -> tuple[str, str]:
     daytime = [item for item in points if 8 <= item[0].hour <= 21]
     if not daytime:
         daytime = points
-    amounts = [amount_mm(point) for _, point in daytime]
+    amounts = [forecast_amount_mm(point) for _, point in daytime]
     conditions = [symbol_condition(point_symbol(point)) for _, point in daytime]
     total = round(sum(amounts), 1)
 
@@ -123,11 +156,12 @@ def normalize(
     sunrise_payload: dict,
     timezone_name: str,
     now: datetime | None = None,
+    forecast_date: date | None = None,
 ) -> dict:
     timezone = ZoneInfo(timezone_name)
     current = now.astimezone(timezone) if now else datetime.now(timezone)
-    today_date = current.date()
-    tomorrow_date = today_date + timedelta(days=1)
+    tomorrow_date = forecast_date or (current.date() + timedelta(days=1))
+    today_date = tomorrow_date - timedelta(days=1)
 
     grouped: dict = {}
     for point in forecast_payload.get("properties", {}).get("timeseries", []):
@@ -141,6 +175,8 @@ def normalize(
 
     day_points = [item for item in tomorrow_points if 9 <= item[0].hour <= 18]
     night_points = [item for item in tomorrow_points if item[0].hour <= 6 or item[0].hour >= 22]
+    if not day_points or not night_points:
+        raise ValueError("MET Norway response has incomplete tomorrow periods")
     day_temp = max(float(instant(point).get("air_temperature", 0)) for _, point in day_points)
     night_temp = min(float(instant(point).get("air_temperature", 0)) for _, point in night_points)
     _, day_point = closest(tomorrow_points, 14)
@@ -150,11 +186,13 @@ def normalize(
     timeline = []
     for hour in TIMELINE_HOURS:
         _, point = closest(tomorrow_points, hour)
-        timeline.append({"hour": f"{hour:02d}", "amount_mm": amount_mm(point)})
+        timeline.append({"hour": f"{hour:02d}", **timeline_precipitation(point)})
 
     return {
         "source": "MET Norway",
         "source_url": "https://api.met.no/",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "data_modified": True,
         "generated_at": current.isoformat(timespec="seconds"),
         "today": {
             "date": today_date.isoformat(),
@@ -198,11 +236,12 @@ def main() -> None:
     parser.add_argument("--lat", required=True, type=float)
     parser.add_argument("--lon", required=True, type=float)
     parser.add_argument("--timezone", default="Europe/Moscow")
+    parser.add_argument("--forecast-date", type=date.fromisoformat)
     parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()
 
     timezone = ZoneInfo(args.timezone)
-    tomorrow = datetime.now(timezone).date() + timedelta(days=1)
+    tomorrow = args.forecast_date or (datetime.now(timezone).date() + timedelta(days=1))
     client = session()
     forecast = client.get(
         LOCATIONFORECAST_URL,
@@ -224,7 +263,16 @@ def main() -> None:
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(
-        json.dumps(normalize(forecast.json(), sunrise.json(), args.timezone), ensure_ascii=False, indent=2),
+        json.dumps(
+            normalize(
+                forecast.json(),
+                sunrise.json(),
+                args.timezone,
+                forecast_date=tomorrow,
+            ),
+            ensure_ascii=False,
+            indent=2,
+        ),
         encoding="utf-8",
     )
     print(args.output)

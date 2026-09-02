@@ -1,6 +1,8 @@
 {
   "source": "MET Norway",
   "source_url": "https://api.met.no/",
+  "license_url": "https://creativecommons.org/licenses/by/4.0/",
+  "data_modified": true,
   "generated_at": "2026-08-31T06:00:00+03:00",
   "today": {
     "date": "2026-08-31",

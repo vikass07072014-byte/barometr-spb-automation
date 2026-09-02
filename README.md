@@ -10,9 +10,9 @@
 - выбор заведения и позиции меню из проверяемой базы;
 - крупное изображение блюда или напитка на переднем плане;
 - проверка размера и формата перед публикацией;
-- GitHub Actions: ручной запуск и расписание на `06:20 МСК`;
-- защищённая публикация через официальный Instagram API;
-- сохранение `container_id` и `media_id` после публикации.
+- GitHub Actions: ручной запуск и расписание на `07:50 МСК`;
+- публикация в `08:00 МСК` через Buffer API;
+- сохранение `buffer_post_id` и времени постановки в очередь.
 
 Автопубликация по умолчанию **выключена**. Тестовые данные не отправляются в Instagram.
 
@@ -28,24 +28,25 @@ python src/build_caption.py --weather data/weather.example.json --manifest docs/
 ## Настройка GitHub
 
 1. Включить GitHub Pages: `Settings → Pages → Deploy from a branch → main / docs`.
-2. Добавить Repository secrets:
-   - `INSTAGRAM_ACCESS_TOKEN`
-   - `INSTAGRAM_USER_ID`
-3. Добавить Repository variables:
+2. Создать Buffer Free, подключить Creator-аккаунт Instagram напрямую через Instagram Login.
+3. Добавить Repository secrets:
+   - `BUFFER_API_KEY`
+   - `BUFFER_CHANNEL_ID`
+4. Добавить Repository variables:
    - `AUTOMATION_ENABLED=true` — включает запуск по расписанию;
    - `AUTO_PUBLISH=true` — включает публикацию без утверждения;
-   - `META_API_VERSION=v23.0` — версия Instagram API.
-4. Сначала запустить `Actions → Daily Barometr SPB → Run workflow` с `publish=false`.
-5. Проверить `docs/latest.jpg`; только после этого разрешать публикацию.
+5. Сначала запустить `Actions → Daily Barometr SPB → Run workflow` с `publish=false`.
+6. Проверить `docs/latest.jpg`; только после этого разрешать публикацию.
 
 ## Защитные правила
 
 - секреты никогда не записываются в репозиторий;
 - без `AUTO_PUBLISH=true` отправка в Instagram блокируется;
-- для API создаётся JPEG, поскольку Meta не принимает PNG для одиночной публикации;
+- для публикации создаётся JPEG 1080 × 1350;
 - карточка не публикуется без валидного прогноза и готового заведения;
 - алкогольные позиции маркируются `18+` и не получают рекламных призывов;
-- URL и ID опубликованного поста сохраняются в receipt-файле.
+- URL, Buffer post ID и запланированное время сохраняются в receipt-файле;
+- бесплатный лимит Buffer — до 10 одновременно запланированных публикаций.
 
 ## Статус контента
 

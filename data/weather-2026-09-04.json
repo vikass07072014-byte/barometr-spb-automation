@@ -1,0 +1,73 @@
+{
+  "source": "MET Norway",
+  "source_url": "https://api.met.no/",
+  "license_url": "https://creativecommons.org/licenses/by/4.0/",
+  "data_modified": true,
+  "generated_at": "2026-09-01T16:23:44+03:00",
+  "today": {
+    "date": "2026-09-03",
+    "morning": {
+      "temp": 16,
+      "condition": "cloudy"
+    },
+    "day": {
+      "temp": 18,
+      "condition": "cloudy"
+    },
+    "evening": {
+      "temp": 17,
+      "condition": "partly-cloudy"
+    }
+  },
+  "tomorrow": {
+    "date": "2026-09-04",
+    "day_temp": 15,
+    "night_temp": 12,
+    "condition": "rain",
+    "condition_text": "ДОЖДЬ • ПЕРИОДАМИ",
+    "hourly_precipitation": [
+      {
+        "hour": "06",
+        "has_precipitation": false,
+        "label": "—",
+        "resolution_hours": 6
+      },
+      {
+        "hour": "09",
+        "has_precipitation": true,
+        "label": "ДОЖДЬ",
+        "resolution_hours": 6
+      },
+      {
+        "hour": "12",
+        "has_precipitation": true,
+        "label": "ДОЖДЬ",
+        "resolution_hours": 6
+      },
+      {
+        "hour": "15",
+        "has_precipitation": true,
+        "label": "ДОЖДЬ",
+        "resolution_hours": 6
+      },
+      {
+        "hour": "18",
+        "has_precipitation": true,
+        "label": "ДОЖДЬ",
+        "resolution_hours": 6
+      },
+      {
+        "hour": "21",
+        "has_precipitation": false,
+        "label": "—",
+        "resolution_hours": 6
+      }
+    ],
+    "pressure_mm": 748,
+    "wind_speed": "4,5",
+    "wind_direction": "Ю",
+    "humidity": 86,
+    "sunrise": "06:00",
+    "sunset": "19:53"
+  }
+}

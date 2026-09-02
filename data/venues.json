@@ -7,7 +7,10 @@
     "item": "APEROL SPRITZ",
     "image": "assets/menu/aperol-spritz.png",
     "ready": true,
-    "verified_at": "2026-08-30"
+    "verified_at": "2026-08-30",
+    "used_dates": [
+      "2026-08-31"
+    ]
   },
   {
     "name": "У ЛАРИСЫ",
@@ -17,7 +20,10 @@
     "item": "ЧЕБУРЕК С СЫРОМ",
     "image": "assets/menu/cheburek-cheese.png",
     "ready": true,
-    "verified_at": "2026-08-29"
+    "verified_at": "2026-08-29",
+    "used_dates": [
+      "2026-08-30"
+    ]
   },
   {
     "name": "SURF COFFEE × MDT",
@@ -29,6 +35,42 @@
     "ready": false,
     "verified_at": "2026-08-31",
     "note": "Добавить отдельное изображение чашки на прозрачном фоне"
+  },
+  {
+    "name": "DUO ASIA",
+    "address": "ул. Рубинштейна, 20",
+    "category": "non_alcoholic_drink",
+    "category_label": "БЕЗ АЛКОГОЛЯ",
+    "item": "ЛИМОНАД КРАСНЫЙ БАЗИЛИК",
+    "image": "assets/menu/lemonade-red-basil.png",
+    "ready": true,
+    "verified_at": "2026-08-31",
+    "venue_source": "https://duoasia.ru/",
+    "menu_source": "https://duodostavka.ru/duo-asia/menu/napitki_ba_dostavka"
+  },
+  {
+    "name": "SMOKE BBQ",
+    "display_name": "Smoke BBQ",
+    "address": "ул. Рубинштейна, 11",
+    "category": "food",
+    "category_label": "БЛЮДО ДНЯ",
+    "item": "БУРГЕР С КОПЧЁНОЙ ГОВЯЖЬЕЙ ГРУДИНКОЙ",
+    "image": "assets/menu/smoke-bbq-brisket-burger.png",
+    "ready": true,
+    "verified_at": "2026-09-01",
+    "venue_source": "https://www.smokebbq.ru/",
+    "menu_source": "https://shop.smokebbq.ru/"
+  },
+  {
+    "name": "МИНИСТЕРСТВО",
+    "address": "ул. Рубинштейна, 24",
+    "category": "alcoholic_cocktail_18_plus",
+    "category_label": "КОКТЕЙЛЬ • 18+",
+    "item": "TICKET TO BALI",
+    "image": "assets/menu/ministerstvo-ticket-to-bali.png",
+    "ready": true,
+    "verified_at": "2026-09-01",
+    "venue_source": "https://ministerstvo.bar/",
+    "menu_source": "https://ministerstvo.bar/"
   }
 ]
-

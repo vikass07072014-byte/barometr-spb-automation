@@ -14,7 +14,7 @@ on:
         default: false
         type: boolean
   schedule:
-    - cron: "20 3 * * *"
+    - cron: "50 4 * * *"
 
 permissions:
   contents: write
@@ -27,7 +27,7 @@ jobs:
   daily:
     if: github.event_name == 'workflow_dispatch' || vars.AUTOMATION_ENABLED == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
@@ -63,6 +63,7 @@ jobs:
           python src/build_caption.py --weather "$WEATHER_FILE" --manifest docs/latest-manifest.json --output docs/latest-caption.txt
           forecast_date=$(python -c "import json; print(json.load(open('$WEATHER_FILE', encoding='utf-8'))['tomorrow']['date'])")
           cp docs/latest.jpg "docs/barometr-spb-$forecast_date.jpg"
+          echo "FORECAST_DATE=$forecast_date" >> "$GITHUB_ENV"
 
       - name: Commit generated card
         shell: bash
@@ -73,17 +74,51 @@ jobs:
           git diff --cached --quiet || git commit -m "Generate forecast card [skip ci]"
           git push
 
-      - name: Publish to Instagram
+      - name: Wait for public card URL
+        if: inputs.publish == true || (github.event_name == 'schedule' && vars.AUTO_PUBLISH == 'true')
+        shell: bash
+        run: |
+          image_url="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/barometr-spb-${FORECAST_DATE}.jpg?run=${GITHUB_RUN_ID}"
+          expected_hash=$(sha256sum docs/latest.jpg | cut -d ' ' -f 1)
+          for attempt in {1..30}; do
+            if curl --fail --silent --show-error "$image_url" --output /tmp/public-card.jpg; then
+              actual_hash=$(sha256sum /tmp/public-card.jpg | cut -d ' ' -f 1)
+              if [ "$actual_hash" = "$expected_hash" ]; then
+                echo "IMAGE_URL=$image_url" >> "$GITHUB_ENV"
+                exit 0
+              fi
+            fi
+            sleep 10
+          done
+          echo "GitHub Pages did not expose the exact generated card in time" >&2
+          exit 1
+
+      - name: Schedule with Buffer
         if: inputs.publish == true || (github.event_name == 'schedule' && vars.AUTO_PUBLISH == 'true')
         env:
           AUTO_PUBLISH: "true"
-          INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
-          INSTAGRAM_USER_ID: ${{ secrets.INSTAGRAM_USER_ID }}
-          META_API_VERSION: ${{ vars.META_API_VERSION || 'v23.0' }}
+          BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+          BUFFER_CHANNEL_ID: ${{ secrets.BUFFER_CHANNEL_ID }}
         shell: bash
         run: |
-          sleep 30
-          python src/publish_instagram.py \
-            --image-url "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/latest.jpg" \
+          python src/publish_buffer.py \
+            --image-url "$IMAGE_URL" \
             --caption docs/latest-caption.txt \
-            --receipt docs/publish-receipt.json
+            --manifest docs/latest-manifest.json \
+            --receipt docs/schedule-receipt.json \
+            --publish-time "08:00" \
+            --timezone "Europe/Moscow"
+          python src/update_history.py \
+            --venues data/venues.json \
+            --manifest docs/latest-manifest.json \
+            --receipt docs/schedule-receipt.json
+
+      - name: Commit Buffer schedule receipt and venue history
+        if: inputs.publish == true || (github.event_name == 'schedule' && vars.AUTO_PUBLISH == 'true')
+        shell: bash
+        run: |
+          git config user.name "barometr-spb-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/venues.json docs/schedule-receipt.json
+          git diff --cached --quiet || git commit -m "Record Buffer schedule [skip ci]"
+          git push

@@ -87,15 +87,31 @@ def format_temp(value) -> str:
 
 
 def choose_venue(venues: list[dict], target_date: str, rotation: list[str], strict: bool) -> tuple[dict, list[str]]:
-    ordinal = date.fromisoformat(target_date).toordinal()
+    target = date.fromisoformat(target_date)
+    ordinal = target.toordinal()
     wanted = rotation[ordinal % len(rotation)]
-    candidates = [v for v in venues if v.get("ready") and v.get("category") == wanted and v.get("image")]
-    warnings = []
+
+    def used_within_week(venue: dict) -> bool:
+        for raw_date in venue.get("used_dates", []):
+            used_date = date.fromisoformat(raw_date)
+            age = (target - used_date).days
+            if 0 <= age < 7:
+                return True
+        return False
+
+    candidates = [
+        v for v in venues
+        if v.get("ready")
+        and v.get("category") == wanted
+        and v.get("image")
+        and not used_within_week(v)
+    ]
+    warnings: list[str] = []
     if not candidates:
-        warnings.append(f"No ready venue for rotation category: {wanted}")
-        candidates = [v for v in venues if v.get("ready") and v.get("image")]
-    if not candidates:
-        raise ValueError("No publication-ready venues with foreground images")
+        raise ValueError(
+            f"No unused publication-ready venue for rotation category: {wanted}. "
+            "Add and verify a new venue instead of repeating an old one."
+        )
     if strict and warnings:
         raise ValueError("; ".join(warnings))
     return candidates[ordinal % len(candidates)], warnings
@@ -158,7 +174,7 @@ def render(weather: dict, venue: dict, config: dict, output: Path, warnings: lis
     d = ImageDraw.Draw(base)
     centered(d, (W // 2, 389), f"ЗАВТРА • {tomorrow_dt.day} {months[tomorrow_dt.month]}", load_font(24, bold=True), PALE)
     centered(d, (W // 2, 520), format_temp(tomorrow["day_temp"]), load_font(116, condensed=True))
-    cloud_icon(base, (W // 2, 635), tomorrow.get("condition", "cloudy"), 1.12)
+    cloud_icon(base, (W // 2, 615), tomorrow.get("condition", "cloudy"), 1.12)
     centered(d, (W // 2, 715), tomorrow["condition_text"], load_font(32, condensed=True), PALE)
     centered(d, (W // 2, 755), f"ДНЁМ ДО {format_temp(tomorrow['day_temp'])}  •  НОЧЬЮ {format_temp(tomorrow['night_temp'])}", load_font(16, bold=True), MUTED)
 
@@ -166,18 +182,30 @@ def render(weather: dict, venue: dict, config: dict, output: Path, warnings: lis
     xs = [205, 350, 495, 640, 785, 930]
     y = 812
     d.line((xs[0], y, xs[-1], y), fill=(190, 212, 221, 180), width=5)
-    uses_amounts = any("amount_mm" in item for item in timeline)
+    uses_amounts = all("amount_mm" in item for item in timeline)
     for item, x in zip(timeline, xs):
         prob = int(item.get("probability", 0))
         amount = float(item.get("amount_mm", 0))
-        has_rain = amount >= 0.1 if uses_amounts else prob >= 20
+        has_rain = bool(item.get("has_precipitation", amount >= 0.1 if uses_amounts else prob >= 20))
         centered(d, (x, y - 28), str(item["hour"]), load_font(15, bold=True))
         d.ellipse((x-8, y-8, x+8, y+8), fill=BLUE if has_rain else MUTED)
-        value = f"{amount:g} ММ" if uses_amounts else f"{prob}%"
+        if "label" in item:
+            value = str(item["label"])
+        elif "amount_mm" in item:
+            value = f"{amount:g} ММ"
+        else:
+            value = f"{prob}%"
         centered(d, (x, y + 29), value, load_font(13, bold=True), BLUE if has_rain else MUTED)
-    rain_values = [float(item.get("amount_mm", 0)) for item in timeline] if uses_amounts else [int(item.get("probability", 0)) for item in timeline]
-    threshold = 0.1 if uses_amounts else 20
-    rain_summary = "ОСАДКИ НЕ ОЖИДАЮТСЯ" if max(rain_values, default=0) < threshold else "ОСАДКИ ПО ЧАСАМ • СМОТРИТЕ ТАЙМ-ЛАЙН"
+    has_timeline_rain = any(
+        bool(
+            item.get(
+                "has_precipitation",
+                float(item.get("amount_mm", 0)) >= 0.1 or int(item.get("probability", 0)) >= 20,
+            )
+        )
+        for item in timeline
+    )
+    rain_summary = "ОСАДКИ ПО ВРЕМЕНИ • СМОТРИТЕ ТАЙМ-ЛАЙН" if has_timeline_rain else "ОСАДКИ НЕ ОЖИДАЮТСЯ"
     centered(d, (W // 2, 870), rain_summary, load_font(16, bold=True), AMBER)
 
     stats = [
@@ -195,7 +223,8 @@ def render(weather: dict, venue: dict, config: dict, output: Path, warnings: lis
     glass(base, (72, 1056, 1008, 1278), 30, (20, 29, 28, 235))
     d = ImageDraw.Draw(base)
     d.text((104, 1082), "МЕСТО ДНЯ", font=load_font(18, bold=True), fill=AMBER)
-    d.text((104, 1115), f"Сегодня стоит заглянуть в «{venue['name'].title()}»", font=load_font(17), fill=WHITE)
+    display_name = venue.get("display_name", venue["name"].title())
+    d.text((104, 1115), f"Сегодня стоит заглянуть в «{display_name}»", font=load_font(17), fill=WHITE)
     d.text((104, 1154), venue["name"], font=load_font(35, condensed=True), fill=WHITE)
     d.text((104, 1200), venue["address"].upper(), font=load_font(16, bold=True), fill=PALE)
     d.line((104, 1229, 570, 1229), fill=(AMBER[0], AMBER[1], AMBER[2], 180), width=2)
@@ -204,7 +233,7 @@ def render(weather: dict, venue: dict, config: dict, output: Path, warnings: lis
 
     d = ImageDraw.Draw(base)
     update_date = datetime.fromisoformat(weather["generated_at"]).strftime("%d.%m.%Y")
-    d.text((72, 1310), f"ИСТОЧНИК: {weather['source'].upper()} • ОБНОВЛЕНО {update_date}", font=load_font(13), fill=MUTED)
+    d.text((72, 1310), f"ДАННЫЕ: {weather['source'].upper()} • ОБРАБОТАНО • {update_date}", font=load_font(13), fill=MUTED)
     d.text((1008, 1310), "@BAROMETR.SPB", font=load_font(14, bold=True), fill=AMBER, anchor="ra")
 
     output.parent.mkdir(parents=True, exist_ok=True)

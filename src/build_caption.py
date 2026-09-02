@@ -27,10 +27,12 @@ def main() -> None:
         f"Днём до {temp(forecast['day_temp'])}, ночью {temp(forecast['night_temp'])}. "
         f"{forecast['condition_text'].capitalize()}. Ветер {forecast['wind_speed']} м/с, "
         f"давление {forecast['pressure_mm']} мм рт. ст., влажность {forecast['humidity']}%.\n\n"
-        f"Сегодня стоит заглянуть в {venue['name'].title()}\n"
+        f"Сегодня стоит заглянуть в {venue.get('display_name', venue['name'].title())}\n"
         f"📍 {venue['address']}\n"
         f"{venue['category_label']}: {venue['item']}\n\n"
-        f"Источник: {weather['source']}.\n\n"
+        f"Данные: {weather['source']} — {weather.get('source_url', 'https://api.met.no/')}\n"
+        "Данные обработаны «Барометром Петербурга». "
+        f"Лицензия CC BY 4.0: {weather.get('license_url', 'https://creativecommons.org/licenses/by/4.0/')}\n\n"
         "#барометрпетербурга #погодаспб #санктпетербург #кудасходитьспб #рубинштейна"
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -40,4 +42,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

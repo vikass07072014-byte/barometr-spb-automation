@@ -1,0 +1,68 @@
+{
+  "source": "MET Norway",
+  "source_url": "https://api.met.no/",
+  "license_url": "https://creativecommons.org/licenses/by/4.0/",
+  "data_modified": true,
+  "generated_at": "2026-09-01T16:23:41+03:00",
+  "today": {
+    "date": "2026-09-02",
+    "morning": {
+      "temp": 16,
+      "condition": "cloudy"
+    },
+    "day": {
+      "temp": 17,
+      "condition": "cloudy"
+    },
+    "evening": {
+      "temp": 16,
+      "condition": "clear"
+    }
+  },
+  "tomorrow": {
+    "date": "2026-09-03",
+    "day_temp": 20,
+    "night_temp": 15,
+    "condition": "partly-cloudy",
+    "condition_text": "ОБЛАЧНО С ПРОЯСНЕНИЯМИ",
+    "hourly_precipitation": [
+      {
+        "hour": "06",
+        "amount_mm": 0.0,
+        "has_precipitation": false
+      },
+      {
+        "hour": "09",
+        "amount_mm": 0.0,
+        "has_precipitation": false
+      },
+      {
+        "hour": "12",
+        "amount_mm": 0.0,
+        "has_precipitation": false
+      },
+      {
+        "hour": "15",
+        "amount_mm": 0.0,
+        "has_precipitation": false
+      },
+      {
+        "hour": "18",
+        "amount_mm": 0.0,
+        "has_precipitation": false
+      },
+      {
+        "hour": "21",
+        "has_precipitation": false,
+        "label": "—",
+        "resolution_hours": 6
+      }
+    ],
+    "pressure_mm": 756,
+    "wind_speed": "4,2",
+    "wind_direction": "ЮЗ",
+    "humidity": 63,
+    "sunrise": "05:58",
+    "sunset": "19:56"
+  }
+}

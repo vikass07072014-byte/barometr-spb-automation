@@ -4,7 +4,7 @@
   "latitude": 59.9343,
   "longitude": 30.3351,
   "timezone": "Europe/Moscow",
-  "daily_publish_time": "06:30",
+  "daily_publish_time": "08:00",
   "weather_source": "MET Norway",
   "rotation": [
     "food",
