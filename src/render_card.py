@@ -125,6 +125,16 @@ def choose_venue(
                 f"Preview reused a recently featured venue for rotation category: {wanted}."
             )
             return preview_candidates[ordinal % len(preview_candidates)], warnings
+        if preview:
+            preview_candidates = [
+                v for v in venues
+                if v.get("ready") and v.get("image")
+            ]
+            if preview_candidates:
+                warnings.append(
+                    f"Preview substituted another ready category because {wanted} has no ready venue."
+                )
+                return preview_candidates[ordinal % len(preview_candidates)], warnings
         raise ValueError(
             f"No unused publication-ready venue for rotation category: {wanted}. "
             "Add and verify a new venue instead of repeating an old one."

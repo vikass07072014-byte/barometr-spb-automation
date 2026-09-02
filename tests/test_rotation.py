@@ -63,6 +63,31 @@ class VenueRotationTest(unittest.TestCase):
         self.assertEqual(venue["name"], "USED")
         self.assertEqual(len(warnings), 1)
 
+    def test_preview_can_substitute_when_category_has_no_ready_venue(self) -> None:
+        venues = [
+            {
+                "name": "READY FOOD",
+                "category": "food",
+                "ready": True,
+                "image": "food.png",
+            },
+            {
+                "name": "COFFEE WITHOUT IMAGE",
+                "category": "coffee",
+                "ready": False,
+                "image": "",
+            },
+        ]
+        venue, warnings = choose_venue(
+            venues,
+            "2026-09-02",
+            ["coffee"],
+            strict=False,
+            preview=True,
+        )
+        self.assertEqual(venue["name"], "READY FOOD")
+        self.assertEqual(len(warnings), 1)
+
 
 if __name__ == "__main__":
     unittest.main()
