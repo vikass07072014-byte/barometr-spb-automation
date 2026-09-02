@@ -3,6 +3,7 @@ __pycache__/
 .venv/
 .deps/
 .test-deps/
+.tools/
 .env
 data/weather.json
 docs/latest-manifest.json
